@@ -7,6 +7,7 @@ require("dotenv").config();
 // Import Packages
 // ============================
 const express = require("express");
+const cors = require("cors");
 
 // ============================
 // Import Database Connection
@@ -22,6 +23,7 @@ const Parking = require("./models/Parking");
 // Create Express App
 // ============================
 const app = express();
+app.use(cors());
 
 // ============================
 // Connect to MongoDB
