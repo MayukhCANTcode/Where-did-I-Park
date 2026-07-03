@@ -1,0 +1,53 @@
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useEffect } from "react";
+
+// This component moves the map whenever latitude or longitude changes
+function ChangeMapView({ latitude, longitude }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView([latitude, longitude], 16, {
+      animate: true,
+    });
+  }, [latitude, longitude]);
+
+  return null;
+}
+
+function MapView({ latitude, longitude }) {
+
+  return (
+
+    <MapContainer
+      center={[latitude, longitude]}
+      zoom={16}
+      style={{
+        height: "400px",
+        width: "100%",
+        borderRadius: "12px",
+      }}
+    >
+
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {/* Move map whenever props change */}
+      <ChangeMapView
+        latitude={latitude}
+        longitude={longitude}
+      />
+
+      <Marker position={[latitude, longitude]}>
+        <Popup>
+          🚗 Parking Location
+        </Popup>
+      </Marker>
+
+    </MapContainer>
+
+  );
+}
+
+export default MapView;

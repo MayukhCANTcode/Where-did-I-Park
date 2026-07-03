@@ -1,113 +1,155 @@
-// ============================
-// Load Environment Variables
-// ============================
 require("dotenv").config();
 
-// ============================
-// Import Packages
-// ============================
 const express = require("express");
 const cors = require("cors");
 
-// ============================
-// Import Database Connection
-// ============================
 const connectDB = require("./config/db");
-
-// ============================
-// Import Parking Model
-// ============================
 const Parking = require("./models/Parking");
 
-// ============================
-// Create Express App
-// ============================
 const app = express();
-app.use(cors());
 
-// ============================
-// Connect to MongoDB
-// ============================
+// ======================
+// Database
+// ======================
+
 connectDB();
 
-// ============================
+// ======================
 // Middleware
-// Converts JSON body into req.body
-// ============================
+// ======================
+
+app.use(cors());
 app.use(express.json());
 
-// =====================================================
-// HOME ROUTE
-// GET /
-// =====================================================
+// ======================
+// Home Route
+// ======================
+
 app.get("/", (req, res) => {
-    res.status(200).json({
-        message: "Welcome to Where Did I Park API 🚗",
-        status: "Server is running"
-    });
+  res.json({
+    message: "Welcome to ParkPal API 🚗",
+  });
 });
 
-// =====================================================
-// CREATE PARKING
-// POST /parking
-// =====================================================
+// ======================
+// Create Parking
+// ======================
+
 app.post("/parking", async (req, res) => {
+  try {
+    const parking = await Parking.create(req.body);
 
-    try {
+    res.status(201).json({
+      success: true,
+      message: "Parking saved successfully!",
+      data: parking,
+    });
 
-        // Save data into MongoDB
-        const savedParking = await Parking.create(req.body);
+  } catch (error) {
 
-        res.status(201).json({
-            message: "Parking saved successfully!",
-            data: savedParking
-        });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
 
-    } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            message: "Something went wrong while saving parking."
-        });
-
-    }
-
+  }
 });
 
-// =====================================================
-// GET ALL PARKING RECORDS
-// GET /parking
-// =====================================================
+// ======================
+// Get All Parking
+// ======================
+
 app.get("/parking", async (req, res) => {
 
-    try {
+  try {
 
-        // Fetch all parking records
-        const parkingList = await Parking.find();
+    const parking = await Parking.find().sort({
+      createdAt: -1,
+    });
 
-        res.status(200).json({
-            message: "Parking records fetched successfully!",
-            data: parkingList
-        });
+    res.json({
+      success: true,
+      data: parking,
+    });
 
-    } catch (error) {
+  } catch (error) {
 
-        console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
 
-        res.status(500).json({
-            message: "Failed to fetch parking records."
-        });
-
-    }
+  }
 
 });
 
-// ============================
+// ======================
+// Update Parking
+// ======================
+
+app.put("/parking/:id", async (req, res) => {
+
+  try {
+
+    const updatedParking = await Parking.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "Parking updated successfully!",
+      data: updatedParking,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+});
+
+// ======================
+// Delete Parking
+// ======================
+
+app.delete("/parking/:id", async (req, res) => {
+
+  try {
+
+    await Parking.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Parking deleted successfully!",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+});
+
+// ======================
 // Start Server
-// ============================
+// ======================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+
+  console.log(`🚀 Server running on port ${PORT}`);
+
 });
