@@ -236,6 +236,15 @@ function App() {
   };
 
   const handleSubmit = async () => {
+    if (!floor || !floor.trim()) {
+      showToast("Please enter a floor or level", "error");
+      return;
+    }
+    if (!latitude || !longitude) {
+      showToast("Please provide your location", "error");
+      return;
+    }
+    
     try {
       setSaving(true);
       let uploadedImageUrl = imageUrl;
