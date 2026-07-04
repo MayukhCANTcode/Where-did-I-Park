@@ -27,7 +27,7 @@ const parkingSchema = new mongoose.Schema(
         imageUrl: {
             type: String,
             default: ""
-        }
+        },
 
     },
 

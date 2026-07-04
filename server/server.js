@@ -46,14 +46,11 @@ app.post("/parking", async (req, res) => {
       message: "Parking saved successfully!",
       data: parking,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 });
 
@@ -62,27 +59,20 @@ app.post("/parking", async (req, res) => {
 // ======================
 
 app.get("/parking", async (req, res) => {
-
   try {
-
     const parking = await Parking.find().sort({
       createdAt: -1,
     });
-
     res.json({
       success: true,
       data: parking,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
-
 });
 
 // ======================
@@ -90,15 +80,13 @@ app.get("/parking", async (req, res) => {
 // ======================
 
 app.put("/parking/:id", async (req, res) => {
-
   try {
-
     const updatedParking = await Parking.findByIdAndUpdate(
       req.params.id,
       req.body,
       {
         new: true,
-      }
+      },
     );
 
     res.json({
@@ -106,16 +94,12 @@ app.put("/parking/:id", async (req, res) => {
       message: "Parking updated successfully!",
       data: updatedParking,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
-
 });
 
 // ======================
@@ -123,25 +107,19 @@ app.put("/parking/:id", async (req, res) => {
 // ======================
 
 app.delete("/parking/:id", async (req, res) => {
-
   try {
-
     await Parking.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,
       message: "Parking deleted successfully!",
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
-
 });
 
 // ======================
@@ -151,7 +129,5 @@ app.delete("/parking/:id", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-
   console.log(`🚀 Server running on port ${PORT}`);
-
 });

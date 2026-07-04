@@ -1,0 +1,61 @@
+# ============================================
+# ParkPal — Docker Compose (Development)
+# ============================================
+# Services: frontend, backend
+# MongoDB Atlas is used externally (not containerized)
+# ============================================
+
+services:
+
+  # ========================================
+  # Backend — Express + MongoDB Atlas
+  # ========================================
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: development
+    container_name: parkpal-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    volumes:
+      # Bind mount: live reload when source code changes
+      - ./server:/app/server
+      # Bind mount: root package.json so require() resolves
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      # Named volume: preserve node_modules inside container
+      # (prevents host node_modules from overwriting container's)
+      - backend_node_modules:/app/node_modules
+    restart: unless-stopped
+
+  # ========================================
+  # Frontend — React + Vite
+  # ========================================
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: parkpal-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./client/.env
+    volumes:
+      # Bind mount: hot reload when source code changes
+      - ./client:/app
+      # Named volume: preserve node_modules inside container
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# ========================================
+# Named Volumes
+# ========================================
+volumes:
+  backend_node_modules:
+  frontend_node_modules:

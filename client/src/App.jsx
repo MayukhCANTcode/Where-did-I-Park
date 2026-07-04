@@ -4,9 +4,10 @@
 // UI-only overhaul. All backend APIs, routes, and business logic are UNCHANGED.
 // Features preserved: CRUD, Cloudinary upload, Leaflet map, geolocation.
 // ============================================================================
-
 import { useEffect, useState, useRef } from "react";
+import api from "./api";
 import axios from "axios";
+
 import MapView from "./components/ui/MapView";
 
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,7 @@ function App() {
 
   const fetchParking = async () => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/parking`,
-      );
+      const response = await api.get("/parking");
       setParkingList(response.data.data);
     } catch (err) {
       console.log(err);
@@ -118,7 +117,7 @@ function App() {
     if (!window.confirm("Delete this parking?")) return;
 
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/parking/${id}`);
+      await api.delete(`/parking/${id}`);
       showToast("Parking deleted");
       fetchParking();
     } catch (err) {
@@ -156,12 +155,9 @@ function App() {
         uploadedImageUrl = await uploadImage();
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/ai/generate-note`,
-        {
-          imageUrl: uploadedImageUrl,
-        },
-      );
+      const response = await api.post("/ai/generate-note", {
+        imageUrl: uploadedImageUrl,
+      });
 
       setNote(response.data.note);
 
@@ -187,20 +183,17 @@ function App() {
       }
 
       if (editingId) {
-        await axios.put(
-          `${import.meta.env.VITE_API_URL}/parking/${editingId}`,
-          {
-            floor,
-            note,
-            latitude,
-            longitude,
-            imageUrl: uploadedImageUrl,
-          },
-        );
+        await api.put(`/parking/${editingId}`, {
+          floor,
+          note,
+          latitude,
+          longitude,
+          imageUrl: uploadedImageUrl,
+        });
         showToast("Parking updated successfully!");
         setEditingId(null);
       } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/parking`, {
+        await api.post("/parking", {
           floor,
           note,
           latitude,
@@ -243,6 +236,8 @@ function App() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+
+
   // ============================================================
   // RENDER
   // ============================================================
@@ -282,6 +277,10 @@ function App() {
           <p className="mt-2 text-sm text-slate-400">
             Never forget where you parked.
           </p>
+
+          <div className="mt-6 flex justify-center">
+            {/* Auth UI removed */}
+          </div>
         </div>
       </header>
 
@@ -629,3 +628,4 @@ function App() {
 }
 
 export default App;
+
