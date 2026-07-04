@@ -43,6 +43,8 @@ function App() {
 
   const mapRef = useRef(null);
   const fileInputRef = useRef(null);
+  const googleButtonRef = useRef(null);
+  const [user, setUser] = useState(null);
 
   // ============================================================
   // TOAST — Clean UI feedback instead of browser alerts
@@ -52,6 +54,64 @@ function App() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  // ============================================================
+  // GOOGLE SIGN-IN
+  // ============================================================
+
+  const handleGoogleLogin = (response) => {
+    const token = response.credential;
+    // Decode the JWT payload (base64) to get user info
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    const userData = {
+      name: payload.name,
+      email: payload.email,
+      picture: payload.picture,
+    };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+    showToast("Logged in successfully!");
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setParkingList([]);
+    showToast("Signed out");
+  };
+
+  // Initialize Google Sign-In button
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user && googleButtonRef.current) {
+      const initGsi = () => {
+        if (window.google?.accounts?.id) {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: handleGoogleLogin,
+          });
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: "outline",
+            size: "large",
+            shape: "pill",
+          });
+        } else {
+          setTimeout(initGsi, 100);
+        }
+      };
+      initGsi();
+    }
+  }, [user]);
 
   // ============================================================
   // API CALLS — Exact same endpoints, no changes
@@ -67,8 +127,10 @@ function App() {
   };
 
   useEffect(() => {
-    fetchParking();
-  }, []);
+    if (user) {
+      fetchParking();
+    }
+  }, [user]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -279,7 +341,29 @@ function App() {
           </p>
 
           <div className="mt-6 flex justify-center">
-            {/* Auth UI removed */}
+            {!user ? (
+              <div ref={googleButtonRef} />
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-3">
+                  <img
+                    src={user.picture}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-slate-800">{user.name}</p>
+                    <p className="text-xs text-slate-400">{user.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium text-red-500 border border-red-200 hover:bg-red-50 transition-colors duration-150 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

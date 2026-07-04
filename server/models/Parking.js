@@ -29,6 +29,11 @@ const parkingSchema = new mongoose.Schema(
             default: ""
         },
 
+        userId: {
+            type: String,
+            required: true
+        },
+
     },
 
     {

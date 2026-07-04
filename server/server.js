@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
@@ -8,6 +9,7 @@ const Parking = require("./models/Parking");
 
 const app = express();
 const aiRoutes = require("./ai");
+const auth = require("./middleware/auth");
 
 // ======================
 // Database
@@ -37,9 +39,12 @@ app.get("/", (req, res) => {
 // Create Parking
 // ======================
 
-app.post("/parking", async (req, res) => {
+app.post("/parking", auth, async (req, res) => {
   try {
-    const parking = await Parking.create(req.body);
+    const parking = await Parking.create({
+      ...req.body,
+      userId: req.user.sub,
+    });
 
     res.status(201).json({
       success: true,
@@ -58,9 +63,9 @@ app.post("/parking", async (req, res) => {
 // Get All Parking
 // ======================
 
-app.get("/parking", async (req, res) => {
+app.get("/parking", auth, async (req, res) => {
   try {
-    const parking = await Parking.find().sort({
+    const parking = await Parking.find({ userId: req.user.sub }).sort({
       createdAt: -1,
     });
     res.json({
@@ -79,10 +84,10 @@ app.get("/parking", async (req, res) => {
 // Update Parking
 // ======================
 
-app.put("/parking/:id", async (req, res) => {
+app.put("/parking/:id", auth, async (req, res) => {
   try {
-    const updatedParking = await Parking.findByIdAndUpdate(
-      req.params.id,
+    const updatedParking = await Parking.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.sub },
       req.body,
       {
         new: true,
@@ -106,9 +111,9 @@ app.put("/parking/:id", async (req, res) => {
 // Delete Parking
 // ======================
 
-app.delete("/parking/:id", async (req, res) => {
+app.delete("/parking/:id", auth, async (req, res) => {
   try {
-    await Parking.findByIdAndDelete(req.params.id);
+    await Parking.findOneAndDelete({ _id: req.params.id, userId: req.user.sub });
 
     res.json({
       success: true,
