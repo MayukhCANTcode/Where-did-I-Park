@@ -1,5 +1,20 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useEffect } from "react";
+
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 // This component moves the map whenever latitude or longitude changes
 function ChangeMapView({ latitude, longitude }) {
@@ -13,6 +28,7 @@ function ChangeMapView({ latitude, longitude }) {
 
   return null;
 }
+
 
 function MapView({ latitude, longitude }) {
 
