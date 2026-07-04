@@ -1,0 +1,89 @@
+# ============================================================
+# ParkPal — CI Pipeline
+# ============================================================
+# Validates that frontend builds and backend has no syntax errors.
+# Does NOT deploy, connect to databases, or call external APIs.
+# ============================================================
+
+name: ParkPal CI
+
+# ============================================================
+# TRIGGERS — When does this pipeline run?
+# ============================================================
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+# ============================================================
+# JOBS
+# ============================================================
+
+jobs:
+
+  # ==========================================================
+  # Job 1 — Build Frontend (React + Vite)
+  # ==========================================================
+
+  build-frontend:
+    name: 🖥️ Build Frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: 📂 Install dependencies
+        run: npm install
+
+      - name: 🏗️ Build production bundle
+        run: npm run build
+
+  # ==========================================================
+  # Job 2 — Validate Backend (Express.js)
+  # ==========================================================
+
+  validate-backend:
+    name: ⚙️ Validate Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 📂 Install dependencies
+        run: npm install
+
+      - name: 🔍 Check server.js syntax
+        run: node --check server/server.js
+
+      - name: 🔍 Check ai.js syntax
+        run: node --check server/ai.js
+
+      - name: 🔍 Check config/db.js syntax
+        run: node --check server/config/db.js
+
+      - name: 🔍 Check models/Parking.js syntax
+        run: node --check server/models/Parking.js
