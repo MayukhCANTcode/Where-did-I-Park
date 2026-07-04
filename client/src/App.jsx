@@ -200,7 +200,7 @@ function App() {
         showToast("Parking updated successfully!");
         setEditingId(null);
       } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/ai/generate-note`, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/parking`, {
           floor,
           note,
           latitude,
@@ -629,4 +629,3 @@ function App() {
 }
 
 export default App;
-
