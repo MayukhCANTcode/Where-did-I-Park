@@ -58,7 +58,7 @@ function App() {
 
   const fetchParking = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/parking");
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/parking`)
       setParkingList(response.data.data);
     } catch (err) {
       console.log(err);
@@ -116,7 +116,7 @@ function App() {
     if (!window.confirm("Delete this parking?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/parking/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/parking/${id}`);
       showToast("Parking deleted");
       fetchParking();
     } catch (err) {
@@ -155,7 +155,7 @@ function App() {
       }
 
       const response = await axios.post(
-        "http://localhost:5000/ai/generate-note",
+        `${import.meta.env.VITE_API_URL}/parking`,
         {
           imageUrl: uploadedImageUrl,
         },
@@ -185,7 +185,7 @@ function App() {
       }
 
       if (editingId) {
-        await axios.put(`http://localhost:5000/parking/${editingId}`, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/parking/${editingId}`, {
           floor,
           note,
           latitude,
@@ -195,7 +195,7 @@ function App() {
         showToast("Parking updated successfully!");
         setEditingId(null);
       } else {
-        await axios.post("http://localhost:5000/parking", {
+        await axios.post(`${import.meta.env.VITE_API_URL}/ai/generate-note`, {
           floor,
           note,
           latitude,
