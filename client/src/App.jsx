@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 function App() {
-
   // ============================================================
   // STATE — Identical to original, no changes to business logic
   // ============================================================
@@ -30,6 +29,7 @@ function App() {
 
   const [parkingList, setParkingList] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [generatingNote, setGeneratingNote] = useState(false);
 
   // UI Feedback State (replaces browser alerts)
   const [toast, setToast] = useState(null);
@@ -83,7 +83,7 @@ function App() {
       },
       () => {
         showToast("Unable to fetch location", "error");
-      }
+      },
     );
   };
 
@@ -98,7 +98,7 @@ function App() {
 
       const response = await axios.post(
         "https://api.cloudinary.com/v1_1/f3k16qqy/image/upload",
-        formData
+        formData,
       );
 
       setUploading(false);
@@ -137,6 +137,43 @@ function App() {
     setEditingId(parking._id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  const generateParkingNote = async () => {
+    try {
+      if (!image && !imageUrl) {
+        alert("Please choose an image first.");
+
+        return;
+      }
+
+      setGeneratingNote(true);
+
+      let uploadedImageUrl = imageUrl;
+
+      // Upload image first if user selected a new one
+      if (image) {
+        uploadedImageUrl = await uploadImage();
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/ai/generate-note",
+        {
+          imageUrl: uploadedImageUrl,
+        },
+      );
+
+      setNote(response.data.note);
+
+      setImageUrl(uploadedImageUrl);
+
+      setGeneratingNote(false);
+    } catch (error) {
+      console.log(error);
+
+      setGeneratingNote(false);
+
+      alert("Failed to generate AI note.");
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -148,17 +185,23 @@ function App() {
       }
 
       if (editingId) {
-        await axios.put(
-          `http://localhost:5000/parking/${editingId}`,
-          { floor, note, latitude, longitude, imageUrl: uploadedImageUrl }
-        );
+        await axios.put(`http://localhost:5000/parking/${editingId}`, {
+          floor,
+          note,
+          latitude,
+          longitude,
+          imageUrl: uploadedImageUrl,
+        });
         showToast("Parking updated successfully!");
         setEditingId(null);
       } else {
-        await axios.post(
-          "http://localhost:5000/parking",
-          { floor, note, latitude, longitude, imageUrl: uploadedImageUrl }
-        );
+        await axios.post("http://localhost:5000/parking", {
+          floor,
+          note,
+          latitude,
+          longitude,
+          imageUrl: uploadedImageUrl,
+        });
         showToast("Parking saved successfully!");
       }
 
@@ -201,20 +244,22 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-
       {/* ========================================== */}
       {/* TOAST NOTIFICATION                         */}
       {/* ========================================== */}
 
       {toast && (
-        <div className={`
+        <div
+          className={`
           fixed top-5 right-5 z-50 px-4 py-2.5 rounded-lg text-sm font-medium
           shadow-lg border transition-all duration-300 animate-[fadeInDown_0.3s_ease-out]
-          ${toast.type === "error"
-            ? "bg-red-50 text-red-700 border-red-200"
-            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+          ${
+            toast.type === "error"
+              ? "bg-red-50 text-red-700 border-red-200"
+              : "bg-emerald-50 text-emerald-700 border-emerald-200"
           }
-        `}>
+        `}
+        >
           {toast.type === "error" ? "✕" : "✓"} {toast.message}
         </div>
       )}
@@ -225,7 +270,6 @@ function App() {
 
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-12 text-center">
-
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
             ParkPal
           </h1>
@@ -233,7 +277,6 @@ function App() {
           <p className="mt-2 text-sm text-slate-400">
             Never forget where you parked.
           </p>
-
         </div>
       </header>
 
@@ -242,15 +285,12 @@ function App() {
       {/* ========================================== */}
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
           {/* ====================================== */}
           {/* LEFT COLUMN — Parking Form             */}
           {/* ====================================== */}
 
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-
             {/* Section header */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
               <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-sm">
@@ -261,13 +301,14 @@ function App() {
                   {editingId ? "Edit Parking" : "New Parking"}
                 </h2>
                 <p className="text-xs text-slate-400">
-                  {editingId ? "Update your parking details" : "Save your current parking spot"}
+                  {editingId
+                    ? "Update your parking details"
+                    : "Save your current parking spot"}
                 </p>
               </div>
             </div>
 
             <div className="space-y-4">
-
               {/* Floor */}
               <div>
                 <label className="block text-xs text-slate-500 mb-1.5 font-medium">
@@ -366,15 +407,25 @@ function App() {
                 disabled={uploading || saving}
                 className="w-full h-10 rounded-lg text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors duration-150 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
-                {(uploading || saving) ? (
+                {uploading || saving ? (
                   <>
                     <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     {uploading ? "Uploading..." : "Saving..."}
                   </>
+                ) : editingId ? (
+                  "💾 Update Parking"
                 ) : (
-                  editingId ? "💾 Update Parking" : "🚗 Save Parking"
+                  "🚗 Save Parking"
                 )}
               </button>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={generateParkingNote}
+                disabled={generatingNote || uploading || saving}
+              >
+                {generatingNote ? " Generating..." : "✨ Generate AI Note"}
+              </Button>
 
               {editingId && (
                 <button
@@ -384,7 +435,6 @@ function App() {
                   Cancel Editing
                 </button>
               )}
-
             </div>
           </section>
 
@@ -392,8 +442,10 @@ function App() {
           {/* RIGHT COLUMN — Live Map                */}
           {/* ====================================== */}
 
-          <section ref={mapRef} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-
+          <section
+            ref={mapRef}
+            className="bg-white rounded-xl border border-slate-200 shadow-sm p-6"
+          >
             {/* Section header */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
               <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-sm">
@@ -428,9 +480,7 @@ function App() {
                 {selectedLocation.longitude.toFixed(4)}°E
               </span>
             </div>
-
           </section>
-
         </div>
 
         {/* ========================================== */}
@@ -438,7 +488,6 @@ function App() {
         {/* ========================================== */}
 
         <section className="mt-10">
-
           {/* Section header */}
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-sm">
@@ -458,21 +507,22 @@ function App() {
           {parkingList.length === 0 && (
             <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
               <span className="text-3xl block mb-3">🅿️</span>
-              <p className="text-sm font-medium text-slate-500">No parking records yet</p>
-              <p className="text-xs text-slate-400 mt-1">Save your first parking spot above</p>
+              <p className="text-sm font-medium text-slate-500">
+                No parking records yet
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Save your first parking spot above
+              </p>
             </div>
           )}
 
           {/* Parking card grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-
             {parkingList.map((parking) => (
-
               <div
                 key={parking._id}
                 className="group bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md hover:border-slate-300 transition-all duration-200 hover:-translate-y-0.5"
               >
-
                 {/* Parking Image */}
                 {parking.imageUrl && (
                   <div className="relative h-44 overflow-hidden">
@@ -486,7 +536,6 @@ function App() {
 
                 {/* Card Content */}
                 <div className="p-4 space-y-3">
-
                   {/* Floor + Note */}
                   <div>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-medium mb-2">
@@ -509,7 +558,6 @@ function App() {
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-
                     {/* View on Map */}
                     <button
                       onClick={() => {
@@ -520,7 +568,10 @@ function App() {
                           latitude: Number(parking.latitude),
                           longitude: Number(parking.longitude),
                         });
-                        mapRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        mapRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
                       }}
                       className="flex-1 h-8 rounded-md text-xs font-medium text-slate-500 bg-slate-50 hover:bg-slate-100 hover:text-slate-700 border border-slate-200 transition-colors duration-150 flex items-center justify-center gap-1 cursor-pointer"
                     >
@@ -542,16 +593,12 @@ function App() {
                     >
                       🗑️
                     </button>
-
                   </div>
                 </div>
               </div>
-
             ))}
-
           </div>
         </section>
-
       </main>
 
       {/* ========================================== */}
@@ -560,7 +607,8 @@ function App() {
 
       <footer className="border-t border-slate-200 mt-16 py-6 text-center bg-white">
         <p className="text-xs text-slate-300">
-          Built with React, Leaflet & Cloudinary — ParkPal © {new Date().getFullYear()}
+          Built with React, Leaflet & Cloudinary — ParkPal ©{" "}
+          {new Date().getFullYear()}
         </p>
       </footer>
 
@@ -571,7 +619,6 @@ function App() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-
     </div>
   );
 }

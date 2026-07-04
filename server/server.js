@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const Parking = require("./models/Parking");
 
 const app = express();
+const aiRoutes = require("./ai");
 
 // ======================
 // Database
@@ -20,6 +21,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use("/ai", aiRoutes);
 
 // ======================
 // Home Route
